@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home, CreditCard, TrendingDown, LineChart, Wallet, Repeat, Plus, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Home, CreditCard, TrendingDown, LineChart, Wallet, Repeat, Plus, ChevronLeft, ChevronRight, Calendar, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import AdicionarContaModal from "@/components/adicionar-conta";  
 
 export default function DashboardHome() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date()); 
   const [monthlyExpenses, setMonthlyExpenses] = useState<string>("R$ 2.500,00");
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false);  
+  const navigate = useNavigate();
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   const formatMonthYear = (date: Date): string => {
     const formattedDate = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
@@ -45,10 +53,15 @@ export default function DashboardHome() {
     return expenses[monthKey] || "R$ 0,00"; //retorna "R$ 0,00" se não houver despesas
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-amber-50 text-black p-4 space-y-6">
+      <aside className="w-64 bg-gray-100 text-black p-4 space-y-6">
         <h2 className="text-lg font-bold">FinPlan</h2>
         <nav className="space-y-4">
           <a href="#" className="flex items-center gap-2 hover:text-gray-300">
@@ -77,9 +90,16 @@ export default function DashboardHome() {
             <a href="#" className="flex items-center gap-2 hover:text-gray-300">
               <Plus size={16} /> Adicionar Transação
             </a>
-            <a href="#" className="flex items-center gap-2 hover:text-gray-300">
-              <Plus size={16} /> Adicionar Conta
-            </a>
+            <a 
+        href="#" 
+        className="flex items-center gap-2 hover:text-gray-300"
+        onClick={(e) => {
+          e.preventDefault(); 
+          handleOpenModal();
+        }}
+      >
+        <Plus size={16} /> Adicionar Conta
+      </a>
             <a href="#" className="flex items-center gap-2 hover:text-gray-300">
               <Plus size={16} /> Adicionar Despesa
             </a>
@@ -96,27 +116,50 @@ export default function DashboardHome() {
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
         {/* Menu Superior */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">FinPlan</h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePreviousMonth}
-              className="p-2 hover:bg-gray-200 rounded flex items-center gap-1"
-            >
-              <ChevronLeft size={20} />
-              <span>Anterior</span>
-            </button>
+        <div className="flex justify-end items-center mb-6">
+          <div className="flex items-center gap-4">
+            {/* Navegação de meses */}
             <div className="flex items-center gap-2">
-              <Calendar size={20} className="text-gray-600" />
-              <span className="text-lg">{formatMonthYear(currentDate)}</span>
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 hover:bg-gray-200 rounded flex items-center gap-1"
+              >
+                <ChevronLeft size={20} />
+                <span>Anterior</span>
+              </button>
+              <div className="flex items-center gap-2">
+                <Calendar size={20} className="text-gray-600" />
+                <span className="text-lg">{formatMonthYear(currentDate)}</span>
+              </div>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 hover:bg-gray-200 rounded flex items-center gap-1"
+              >
+                <span>Próximo</span>
+                <ChevronRight size={20} />
+              </button>
             </div>
-            <button
-              onClick={handleNextMonth}
-              className="p-2 hover:bg-gray-200 rounded flex items-center gap-1"
-            >
-              <span>Próximo</span>
-              <ChevronRight size={20} />
-            </button>
+
+            {/* Ícone de usuário com dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="p-2 hover:bg-gray-200 rounded"
+              >
+                <User size={24} />
+              </button>
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg">
+                  <div className="p-2 text-sm text-gray-700">rennandev7@gmail.com</div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left p-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Sair
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -222,6 +265,8 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       </main>
+
+      <AdicionarContaModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </div>
   );
 }

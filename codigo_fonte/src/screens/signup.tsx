@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Adicione useNavigate
 
 const signupSchema = z
   .object({
@@ -31,9 +31,35 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   });
 
-  const onSubmit = (data: SignupFormValues) => {
-    console.log("Cadastro:", data);
-    //chamada para API de registro
+  const navigate = useNavigate(); 
+
+  const onSubmit = async (data: SignupFormValues) => {
+    try {
+      const response = await fetch("http://localhost/api/register.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        console.error(result.error);
+        alert("Erro ao cadastrar: " + result.error);
+      } else {
+        console.log("Sucesso:", result);
+        alert("Cadastro realizado com sucesso!");
+        navigate("/login"); 
+      }
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      alert("Erro ao conectar com o servidor.");
+    }
   };
 
   return (
