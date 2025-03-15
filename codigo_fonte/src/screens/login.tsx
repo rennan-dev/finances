@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -24,9 +24,32 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log("Login:", data);
-    //chamada para API de autenticação
+  const navigate = useNavigate(); 
+
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      const response = await fetch("http://localhost/api/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+  
+      const result = await response.json();
+      if (result.error) {
+        console.error(result.error);
+        alert("Erro ao fazer login: " + result.error);
+      } else {
+        console.log("Sucesso:", result);
+        localStorage.setItem("user", JSON.stringify({ id: result.user.id, email: result.user.email }));
+        alert("Login bem-sucedido!");
+        navigate("/home");
+      }
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      alert("Erro ao conectar com o servidor.");
+    }
   };
 
   return (
@@ -55,7 +78,9 @@ export default function LoginPage() {
               )}
             </div>
             <div className="flex justify-between text-sm">
-              <Link to="/forgot-password" className="text-blue-500 hover:underline">Esqueceu a senha?</Link>
+              <Link to="/forgot-password" className="text-blue-500 hover:underline">
+                Esqueceu a senha?
+              </Link>
             </div>
             <Button type="submit" className="w-full bg-black text-white">
               Entrar
